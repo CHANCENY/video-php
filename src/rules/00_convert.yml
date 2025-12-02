@@ -1,0 +1,7 @@
+convert_to_mp4:
+  enabled: true
+  format: "mp4"
+  video_codec: "libx264"
+  audio_codec: "aac"
+  crf: 22
+  preset: "medium"

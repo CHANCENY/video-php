@@ -1,0 +1,4 @@
+frames:
+  enabled: false
+  interval_seconds: 10
+  output_folder: null

@@ -1,0 +1,5 @@
+resize:
+  enabled: false
+  width: null
+  height: null
+  keep_aspect_ratio: true

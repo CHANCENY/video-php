@@ -1,0 +1,7 @@
+subtitles:
+  enabled: false
+  file: null
+  font: null
+  font_size: 20
+  font_color: "white"
+  outline: true

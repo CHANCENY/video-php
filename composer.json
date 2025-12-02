@@ -1,0 +1,21 @@
+{
+    "name": "simp/video-php",
+    "description": "This package uses static build ffmpeg under GNU licence to process videos in linux php installation",
+    "type": "library",
+    "require": {
+        "symfony/var-dumper": "^8.0",
+        "symfony/yaml": "^8.0"
+    },
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Simp\\VideoPhp\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "CHANCENY",
+            "email": "nyasuluchance6@gmail.com"
+        }
+    ]
+}

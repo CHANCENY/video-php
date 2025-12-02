@@ -1,0 +1,4 @@
+compress:
+  enabled: false
+  crf: 28
+  preset: "veryfast"

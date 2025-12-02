@@ -1,0 +1,7 @@
+watermark:
+  enabled: false
+  file: null
+  position: "bottom-right"
+  opacity: 0.8
+  x_offset: 10
+  y_offset: 10
