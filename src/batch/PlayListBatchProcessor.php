@@ -239,7 +239,21 @@ class PlayListBatchProcessor
     {
         $manifest = [
             "version"  => 1,
-            "segments" => array_map(fn($p) => basename($p), $segments),
+            "segments" => array_map(function($p) use(&$frames){
+                $metadata = Video::metadata()->getSummary($p);
+                $list = explode("/", $p);
+                $last = array_pop($list);
+                $filename = implode("/", $list). "/". $last . "_frame.jpg";
+                Video::picture()->extractFrame($p,$filename,3.0);
+                if (file_exists($filename)) {
+                    $frames[] = $filename;
+                }
+                return [
+                    "path" => basename($p),
+                    "metadata" => $metadata,
+                    'segment_frame' => file_exists($filename) ? basename($filename) : null
+                ];
+            }, $segments),
             "frames"   => array_map(fn($p) => basename($p), $frames),
             "created_at" => date('c'),
         ];
