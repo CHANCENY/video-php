@@ -26,9 +26,13 @@ class VideoSplitter
         $ffmpeg = $this->binary->getFFmpeg();
         $outputPattern = rtrim($outputDir, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'segment_%03d.mp4';
 
-        $cmd = escapeshellcmd($ffmpeg) . " -i " . escapeshellarg($inputPath) .
-            " -c copy -map 0 -segment_time {$segmentDuration} -f segment " .
-            escapeshellarg($outputPattern);
+        // FIXED: reset timestamps so every segment starts from 00:00
+        $cmd = escapeshellcmd($ffmpeg)
+            . " -i " . escapeshellarg($inputPath)
+            . " -map 0 -c copy -f segment"
+            . " -segment_time {$segmentDuration}"
+            . " -reset_timestamps 1"
+            . " " . escapeshellarg($outputPattern);
 
         $this->runProcess($cmd, $duration, $progressCallback);
 
@@ -57,16 +61,27 @@ class VideoSplitter
         foreach ($segments as $index => $segment) {
             $start = $segment['start'] ?? 0;
             $end = $segment['end'] ?? 0;
+
             if ($end <= $start) {
                 throw new \InvalidArgumentException("Segment end time must be greater than start time. Segment index: {$index}");
             }
 
             $duration = $end - $start;
-            $outputFile = rtrim($outputDir, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . sprintf('segment_%03d.mp4', $index + 1);
-            $cmd = escapeshellcmd($ffmpeg) . " -ss {$start} -i " . escapeshellarg($inputPath) .
-                " -t {$duration} -c copy " . escapeshellarg($outputFile);
+            $outputFile = rtrim($outputDir, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . sprintf('segment_%03d.mp4', $index);
 
-            $this->runProcess($cmd, $duration, fn($progress) => $progressCallback && $progressCallback($progress, $index + 1));
+            // FIXED: force timestamps to restart at 00:00
+            // FIXED: use accurate seeking (place -ss before input)
+            $cmd = escapeshellcmd($ffmpeg)
+                . " -ss {$start}"
+                . " -i " . escapeshellarg($inputPath)
+                . " -t {$duration} -c copy"
+                . " -reset_timestamps 1"
+                . " " . escapeshellarg($outputFile);
+
+            $this->runProcess($cmd, $duration, fn($progress) =>
+                $progressCallback && $progressCallback($progress, $index)
+            );
+
             $outputFiles[] = $outputFile;
         }
 

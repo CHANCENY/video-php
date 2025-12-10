@@ -25,6 +25,9 @@ class PlayListBatchProcessor
             && $rules['convert_to_mp4']['format'] !== 'mp4') {
             throw new \InvalidArgumentException("Only mp4 format is supported for now.");
         }
+        if (empty($rules['subtitle']) && !$rules['subtitle']['enabled'] && !empty($rules['subtitle']['output_file'])) {
+            throw new \InvalidArgumentException("Subtitle rule is required and must be enabled.");
+        }
 
         $metadata = Video::metadata()->getSummary($videoPath);
 
@@ -87,15 +90,17 @@ class PlayListBatchProcessor
             mkdir($rules['output_file'], 0755, true);
         }
 
+        // ---- SUBTITLE ----
+        $subtitles = Video::subtitleManager()->extractAllWithMetadata($videoPath, $rules['subtitle']['output_file']);
+
+
         // ---- CONVERT TO MP4 ----
         if ($convertFlag) {
-            $tempVideoFile = sys_get_temp_dir() . DIRECTORY_SEPARATOR . uniqid('video_') . ".mp4";
+            $tempVideoFile = $rules['output_file'] . DIRECTORY_SEPARATOR . uniqid('video_') . ".mp4";
 
             Video::convertor()->convert(
                 $videoPath,
                 $tempVideoFile,
-                $rules['convert_to_mp4']['video_codec'] ?? null,
-                $rules['convert_to_mp4']['audio_codec'] ?? null,
             );
 
             $videoPath = $tempVideoFile;
@@ -118,6 +123,11 @@ class PlayListBatchProcessor
             $segmentsVideos[] = $videoPath;
         }
 
+        foreach ($subtitles as $subtitle) {
+            $segmentsVideos[] = $subtitle['file'];
+            $subtitle['file'] = pathinfo($subtitle['file'], PATHINFO_FILENAME);
+        }
+
         // ---- FRAMES ----
         $pictureFrames = [];
 
@@ -131,6 +141,8 @@ class PlayListBatchProcessor
             $pictureFrames[] = $frame;
         }
 
+
+
         // ---- MOVE FILES TO PERMANENT ----
         $finalSegments = $this->moveToPermanent($segmentsVideos, $rules['output_file']);
         $finalFrames   = $this->moveToPermanent($pictureFrames, $rules['output_file']);
@@ -141,7 +153,7 @@ class PlayListBatchProcessor
 
         // ---- CREATE JSON CUSTOM MANIFEST ----
         $jsonFile = $rules['output_file'] . DIRECTORY_SEPARATOR . "playlist.json";
-        $this->createJsonManifest($jsonFile, $finalSegments, $finalFrames);
+        $this->createJsonManifest($jsonFile, $finalSegments, $finalFrames,$subtitles);
 
         return $manifestFile;
     }
@@ -235,7 +247,7 @@ class PlayListBatchProcessor
     /**
      * Generate a JSON playlist with full metadata.
      */
-    protected function createJsonManifest(string $file, array $segments, array $frames): void
+    protected function createJsonManifest(string $file, array $segments, array $frames, array $subtitles = []): void
     {
         $manifest = [
             "version"  => 1,
@@ -255,6 +267,7 @@ class PlayListBatchProcessor
                 ];
             }, $segments),
             "frames"   => array_map(fn($p) => basename($p), $frames),
+            'subtitles' => $subtitles,
             "created_at" => date('c'),
         ];
 

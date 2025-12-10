@@ -12,7 +12,7 @@ use Simp\VideoPhp\metadata\VideoMetadata;
 use Simp\VideoPhp\picture\VideoPictureFrame;
 use Simp\VideoPhp\resizer\VideoResizer;
 use Simp\VideoPhp\splitter\VideoSplitter;
-use Simp\VideoPhp\subtitle\SubtitleAdder;
+use Simp\VideoPhp\subtitle\SubtitleManager;
 use Simp\VideoPhp\watermark\VideoWaterMarker;
 
 class Video
@@ -26,7 +26,7 @@ class Video
     public VideoMerger $merger;
     public VideoAudioExtractor $audioExtractor;
     public VideoCompressor $compressor;
-    public SubtitleAdder $subtitleAdder;
+    public SubtitleManager $subtitleAdder;
     public PlayListBatchProcessor $playlistBatchProcessor;
 
     public function __construct(?string $arch = null)
@@ -41,7 +41,7 @@ class Video
         $this->merger = new VideoMerger($build);
         $this->audioExtractor = new VideoAudioExtractor($build);
         $this->compressor = new VideoCompressor($build);
-        $this->subtitleAdder = new SubtitleAdder($build);
+        $this->subtitleAdder = new SubtitleManager($build);
         $this->playlistBatchProcessor = new PlayListBatchProcessor($build);
     }
 
@@ -90,7 +90,7 @@ class Video
         return new Video($arch)->compressor;
     }
 
-    public static function subtitleAdder(?string $arch = null): SubtitleAdder
+    public static function subtitleManager(?string $arch = null): SubtitleManager
     {
         return new Video($arch)->subtitleAdder;
     }
